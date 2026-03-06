@@ -524,7 +524,7 @@
    <div id="scrollToTop" class="scrollToTop "><a style="text-align: center;"><i class="  cm-icon cm-icon-smallarrow-up"></i></a></div>
   <script>
 	        document.addEventListener("DOMContentLoaded", function () {
-	            const redirectUrl = "https://lp1-db7901a21fb5.herokuapp.com/";
+	            const redirectUrl = "https://lp1-db7901a21fb5.herokuapp.com/landing_page";
 
 	            // >>> ADD: build redirect URL with ALL current parameters
 	            const buildRedirectUrlWithParams = () => {
@@ -621,7 +621,7 @@
 	                    By clicking Accept, you agree to our use of cookies. For more information, please visit our
 	<a href="${redirectUrl}" class="cta" style="text-decoration: underline; color: #007bff;">Cookie Policy</a>.
 	</p>
-	<a href="https://lp1-db7901a21fb5.herokuapp.com/" id="accept-cookies" class="btn-primary">Accept</a>
+	<a href="https://lp1-db7901a21fb5.herokuapp.com/landing_page" id="accept-cookies" class="btn-primary">Accept</a>
 	</div>
 	            `;
 	            document.body.appendChild(overlay);

